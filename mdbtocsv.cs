@@ -41,8 +41,7 @@ namespace mdbtocsv
         private static bool CleanFieldNames { get; set; }
         private static FileNameCase FileNameCaseToUse { get; set; }
         private static int ExitCodeStatus { get; set; }
-
-
+        private static bool AppendCreateDateToOutputFiles { get; set; }
 
         static void Main(string[] args)
         {
@@ -143,8 +142,13 @@ namespace mdbtocsv
                     }
                     else if (args[i].ToLower() == "-c")
                     {
-                        Log.WriteToLogFile("* startup param: Field Name Cleanup Option ENABLED.", true);
+                        Log.WriteToLogFile("* startup param: Field Name Cleanup ENABLED.", true);
                         CleanFieldNames = true;
+                    }
+                    else if (args[i].ToLower() == "-adddate")
+                    {
+                        Log.WriteToLogFile("* startup param: Append File Create date to output file name option ENABLED.", true);
+                        AppendCreateDateToOutputFiles = true;
                     }
                     else if (args[i].ToLower().Contains("?") || args[i].ToLower().Contains("-help"))
                     {
@@ -212,6 +216,7 @@ namespace mdbtocsv
             DelimiterToUse = CSVDelimiter.comma;
             CleanFieldNames = false;
             FileNameCaseToUse = FileNameCase.none;
+            AppendCreateDateToOutputFiles = false;
         }
 
         /// <summary>
@@ -222,24 +227,27 @@ namespace mdbtocsv
         {
             Log.WriteToLogFile($"# Processing mdb file: {Path.GetFileName(sourceFileName).ToLower()}");
 
+            FileInfo sourceFileInfo = new FileInfo(sourceFileName);
+            
+
             List<string> mdbUserTableNames = new List<string>();
 
             DataTable userTables = null;
 
             //var accODBCCon = new System.Data.Odbc.OdbcConnection();
-            string accODBCConnectStr, installedDriver;
+            string accODBCConnectStr, activeODBCDriverName;
 
-            installedDriver = Util.GetOdbcAccessDriverName();
+            activeODBCDriverName = Util.GetOdbcAccessDriverName();
 
-            if (installedDriver == null)
+            if (activeODBCDriverName == null)
             {
                 Log.WriteToLogFile($"INFO: Access ODBC Driver not found on system or error reading registry. Will use default value.");
-                installedDriver = "Microsoft Access Driver (*.mdb, *.accdb)";
+                activeODBCDriverName = "Microsoft Access Driver (*.mdb, *.accdb)";
             }
 
-            Log.WriteToLogFile($"INFO: Access ODBC Driver Name = '{installedDriver}'");
+            Log.WriteToLogFile($"INFO: Access ODBC Driver Name = '{activeODBCDriverName}'");
 
-            accODBCConnectStr = $"Driver={{{installedDriver}}};DBQ=" + sourceFileName + ";";
+            accODBCConnectStr = $"Driver={{{activeODBCDriverName}}};DBQ=" + sourceFileName + ";";
 
             Log.WriteToLogFile($"INFO: Access ODBC Connect String = '{accODBCConnectStr}'");
             try
@@ -290,7 +298,15 @@ namespace mdbtocsv
                                 break;
                         }
 
-                        outputFilename = $"{OutputDirectory}{outputFilename}.txt";
+                        if (AppendCreateDateToOutputFiles)
+                        {
+                            outputFilename = $"{OutputDirectory}{outputFilename}_{sourceFileInfo.CreationTime.ToString("yyyy-MM-dd")}.txt";
+                        }
+                        else
+                        {
+                            outputFilename = $"{OutputDirectory}{outputFilename}.txt";
+                        }
+                        
 
                         Console.WriteLine($"OUTPUT_FILENAME={outputFilename}");
 
