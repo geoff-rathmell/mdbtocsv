@@ -21,9 +21,10 @@ The above example will extract all tables in source file as separate CSVs using 
 
 |OPTION|DESCRIPTION|
 |----- | ----- |
-|-s:sourceFileName | (required) The Access file to process. Wrap in quotes if you have spaces in the path.|
+|-s:\<sourceFileName\> | (required) The Access file to process. Wrap in quotes if you have spaces in the path.|
 |-nooverwrite | \(optional\) Disables file over-write of output file.|
-|-o:directory | \(optional\) user specified output directory. Default = same path as source file.|
+|-o:\<directory\> | \(optional\) user specified output directory. Default = same path as source file.|
+|-filter:\<table_filter\> | \(optional\) Filters output tables to match provided string. (case insensitive)|
 |-nolog | \(optional\) disables the runtime log. Set this as very first parameter to fully disable log. (Not Implemented Yet)|
 |-lower | \(optional\) force output filenames to be lowercase.|
 |-upper | \(optional\) force output filenames to be UPPERCASE.|
@@ -31,7 +32,7 @@ The above example will extract all tables in source file as separate CSVs using 
 |--add-filename | \(optional\) Adds source filename as last field in output file(s).|
 |-p | \(optional\) use PIPE '\|' Delimiter in output file.|
 |-t | \(optional\) use TAB Delimiter in output file.|
-|-c | \(optional\) Clean Fieldnames. Replaces all symbol chars with '_' and convert FieldName to UPPER case|
+|-clean | \(optional\) Clean Fieldnames. Replaces all symbol chars with '_' and convert FieldName to UPPER case|
 |-debug | \(optional\) enables debug 'verbose' mode.|
 
 
