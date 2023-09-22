@@ -4,6 +4,8 @@
 
 **mdbtocsv** is a Windows console app that reads an Access file (mdb|accdb) and exports all *user tables* to a csv file.
 
+Code published from a Visual Studio C# project.
+
 #### mdbtocsv is NOT feature complete and is a work in progress.
 
 ### Prerequisites 
