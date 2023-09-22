@@ -203,7 +203,7 @@ namespace mdbtocsv
 
             if (File.Exists(FileToProcess))
             {
-                ExportDataFromAccessFile(FileToProcess);
+                ExportDataFromAccessFile(FileToProcess, new List<string>());
             }
             else
             {
@@ -240,7 +240,7 @@ namespace mdbtocsv
         /// Process single Access file. Exporting specific tables or all tables (default)
         /// </summary>
         /// <param name="sourceFileName">The filename of mdb file to process</param>
-        private static void ExportDataFromAccessFile(string sourceFileName, string tableFilterMask = "")
+        private static void ExportDataFromAccessFile(string sourceFileName, List<string> tableNames)
         {
             Log.WriteToLogFile($"# Processing mdb file: {Path.GetFileName(sourceFileName).ToLower()}");
 
