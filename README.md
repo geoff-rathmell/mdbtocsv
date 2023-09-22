@@ -22,10 +22,10 @@ The above example will extract all tables in source file as separate CSVs using 
 |OPTION|DESCRIPTION|
 |----- | ----- |
 |-s:\<sourceFileName\> | (required) The Access file to process. Wrap in quotes if you have spaces in the path.|
-|-nooverwrite | \(optional\) Disables file over-write of output file.|
+|-nooverwrite | \(optional\) Disables file over-write of output file. (Not Implemented)|
 |-o:\<directory\> | \(optional\) user specified output directory. Default = same path as source file.|
 |-filter:\<table_filter\> | \(optional\) Filters output tables to match provided string. (case insensitive)|
-|-nolog | \(optional\) disables the runtime log. Set this as very first parameter to fully disable log. (Not Implemented Yet)|
+|-nolog | \(optional\) disables the runtime log. Set this as very first parameter to fully disable log. (Not Implemented)|
 |-lower | \(optional\) force output filenames to be lowercase.|
 |-upper | \(optional\) force output filenames to be UPPERCASE.|
 |--add-date | \(optional\) Appends source file create date to output file(s).|
