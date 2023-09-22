@@ -22,10 +22,11 @@ The above example will extract all tables in source file as separate CSVs using 
 |OPTION|DESCRIPTION|
 |----- | ----- |
 |-s:sourceFileName | (required) The Access file to process. Wrap in quotes if you have spaces in the path.|
-|-noprompt | \(optional\) disables the 'Continue' prompt. Program will run without the need for user interaction.|
+|-nooverwrite | \(optional\) Disables file over-write of output file.|
 |-o:directory | \(optional\) user specified output directory. Default = same path as source file.|
 |-nolog | \(optional\) disables the runtime log. Set this as very first parameter to fully disable log.|
 |-lower | \(optional\) force output filenames to be lowercase.|
+|-upper | \(optional\) force output filenames to be UPPERCASE.|
 |-p | \(optional\) use PIPE '\|' Delimiter in output file.|
 |-t | \(optional\) use TAB Delimiter in output file.|
 |-c | \(optional\) Clean Fieldnames. Replaces all symbol chars with '_' and convert FieldName to UPPER case|
