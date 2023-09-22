@@ -2,9 +2,7 @@
 
 ### Description
 
-mdbtocsv is a Windows console application written in c#.
-
-mdbtocsv reads the given Access file (mdb|accdb) file and exports each user table to a csv file.
+**mdbtocsv** is a Windows console app that reads an Access file (mdb|accdb) and exports all *user tables* to a csv file.
 
 #### mdbtocsv is NOT feature complete and is a work in progress.
 
@@ -15,21 +13,21 @@ mdbtocsv reads the given Access file (mdb|accdb) file and exports each user tabl
 
 **mdbtocsv** -s:"sourceFileName" -noprompt -lower
 
-The above example will extract all tables in source file as separate CSVs
+The above example will extract all tables in source file as separate CSVs using ',' as default delimiter.
 
 **PARAMETERS**:
 
 |OPTION|DESCRIPTION|
 |----- | ----- |
 |-s:sourceFileName | (required) The Access file to process. Wrap in quotes if you have spaces in the path.|
-|-noprompt | disables the 'Continue' prompt. Program will run without the need for user interaction.|
-|-o:directory | user specified output directory. Default = same path as source file.|
-|-nolog | disables the runtime log. !!! Set as very first parameter to fully disable log.|
-|-lower | force output filenames to be lowercase.|
-|-p | use PIPE '\|' Delimiter in output file.|
-|-t | use TAB Delimiter in output file.|
-|-c | Replaces all symbol chars with '_' and converts FieldName to UPPER case|
-|-debug | enables debug 'verbose' mode.|
+|-noprompt | \(optional\) disables the 'Continue' prompt. Program will run without the need for user interaction.|
+|-o:directory | \(optional\) user specified output directory. Default = same path as source file.|
+|-nolog | \(optional\) disables the runtime log. !!! Set as very first parameter to fully disable log.|
+|-lower | \(optional\) force output filenames to be lowercase.|
+|-p | \(optional\) use PIPE '\|' Delimiter in output file.|
+|-t | \(optional\) use TAB Delimiter in output file.|
+|-c | \(optional\) Replaces all symbol chars with '_' and converts FieldName to UPPER case|
+|-debug | \(optional\) enables debug 'verbose' mode.|
 
 
 **Example**
