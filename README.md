@@ -39,7 +39,7 @@ The above example will extract all tables in source file as separate CSVs using 
 
 mdbtocsv.exe "-s:c:\data\receipts.mdb" -p -c -lower
 
-This would parse all tables found in the receipts.mdb file, using the PIPE delimiter, cleaning the fieldnames, and writing the output filenames in lowercase.
+This parses all tables found in the receipts.mdb file, using the PIPE delimiter, cleaning the fieldnames, and writing the output filenames in lowercase.
 
 
 ### License and Contact
