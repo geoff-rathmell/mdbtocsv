@@ -27,18 +27,26 @@ namespace mdbtocsv
             comma, tab, pipe
         }
 
+        public enum FileNameCase
+        { 
+            none, lower, upper
+        }
 
         private static string FileToProcess { get; set; }
-        private static bool ForceLowercaseFilename { get; set; }
         private static bool GenerateLogFile { get; set; }
         private static bool DEBUGMODE { get; set; }
-        private static bool EnableOverWriteWarning { get; set; }
+        private static bool AllowOverWrite { get; set; }
         private static string OutputDirectory { get; set; }
         private static CSVDelimiter DelimiterToUse { get; set; }
         private static bool CleanFieldNames { get; set; }
+        private static FileNameCase FileNameCaseToUse { get; set; }
+        private static int ExitCodeStatus { get; set; }
+        private static bool AppendCreateDateToOutputFiles { get; set; }
 
         static void Main(string[] args)
         {
+            InitApplicationVariables();
+
             Assembly thisAssem = typeof(mdbtocsv).Assembly;
             AssemblyName thisAssemName = thisAssem.GetName();
             Version ver = thisAssemName.Version;
@@ -101,15 +109,20 @@ namespace mdbtocsv
                             Log.WriteToLogFile($"* using default path. {OutputDirectory}", true);
                         }
                     }
-                    else if (args[i].ToLower() == "-noprompt")
+                    else if (args[i].ToLower() == "-nooverwrite")
                     {
-                        Log.WriteToLogFile("* startup param: disabling over-write warning.", true);
-                        EnableOverWriteWarning = false;
+                        Log.WriteToLogFile("* startup param: disabling over-write of output file.", true);
+                        AllowOverWrite = false;
                     }
                     else if (args[i].ToLower() == "-lower")
                     {
                         Log.WriteToLogFile("* startup param: output filenames will be lowercase.", true);
-                        ForceLowercaseFilename = true;
+                        FileNameCaseToUse = FileNameCase.lower;
+                    }
+                    else if (args[i].ToLower() == "-upper")
+                    {
+                        Log.WriteToLogFile("* startup param: output filenames will be UPPERCASE.", true);
+                        FileNameCaseToUse = FileNameCase.upper;
                     }
                     else if (args[i].ToLower() == "-debug")
                     {
@@ -129,8 +142,13 @@ namespace mdbtocsv
                     }
                     else if (args[i].ToLower() == "-c")
                     {
-                        Log.WriteToLogFile("* startup param: Field Name Cleanup Option ENABLED.", true);
+                        Log.WriteToLogFile("* startup param: Field Name Cleanup ENABLED.", true);
                         CleanFieldNames = true;
+                    }
+                    else if (args[i].ToLower() == "-adddate")
+                    {
+                        Log.WriteToLogFile("* startup param: Append File Create date to output file name option ENABLED.", true);
+                        AppendCreateDateToOutputFiles = true;
                     }
                     else if (args[i].ToLower().Contains("?") || args[i].ToLower().Contains("-help"))
                     {
@@ -176,24 +194,29 @@ namespace mdbtocsv
                 Console.WriteLine("ERROR: File To Process was not found. Please check filename.");
             }
 
-            // TODO: disable prompt if -noprompt options is enabled.
+#if DEBUG
             Console.WriteLine($"{Environment.NewLine}Press Any Key To Continue.");
             Console.ReadKey();
+#endif
 
+            Environment.Exit(ExitCodeStatus);
+            
         }
         /// <summary>
         /// Initialize Global Variables
         /// </summary>
         private static void InitApplicationVariables()
         {
+            ExitCodeStatus = 0;
             FileToProcess = string.Empty;
             GenerateLogFile = true;
             DEBUGMODE = false;
-            EnableOverWriteWarning = true;
-            ForceLowercaseFilename = false;
+            AllowOverWrite = true;
             OutputDirectory = string.Empty;
             DelimiterToUse = CSVDelimiter.comma;
             CleanFieldNames = false;
+            FileNameCaseToUse = FileNameCase.none;
+            AppendCreateDateToOutputFiles = false;
         }
 
         /// <summary>
@@ -204,24 +227,27 @@ namespace mdbtocsv
         {
             Log.WriteToLogFile($"# Processing mdb file: {Path.GetFileName(sourceFileName).ToLower()}");
 
+            FileInfo sourceFileInfo = new FileInfo(sourceFileName);
+            
+
             List<string> mdbUserTableNames = new List<string>();
 
             DataTable userTables = null;
 
             //var accODBCCon = new System.Data.Odbc.OdbcConnection();
-            string accODBCConnectStr, installedDriver;
+            string accODBCConnectStr, activeODBCDriverName;
 
-            installedDriver = Util.GetOdbcAccessDriverName();
+            activeODBCDriverName = Util.GetOdbcAccessDriverName();
 
-            if (installedDriver == null)
+            if (activeODBCDriverName == null)
             {
                 Log.WriteToLogFile($"INFO: Access ODBC Driver not found on system or error reading registry. Will use default value.");
-                installedDriver = "Microsoft Access Driver (*.mdb, *.accdb)";
+                activeODBCDriverName = "Microsoft Access Driver (*.mdb, *.accdb)";
             }
 
-            Log.WriteToLogFile($"INFO: Access ODBC Driver Name = '{installedDriver}'");
+            Log.WriteToLogFile($"INFO: Access ODBC Driver Name = '{activeODBCDriverName}'");
 
-            accODBCConnectStr = $"Driver={{{installedDriver}}};DBQ=" + sourceFileName + ";";
+            accODBCConnectStr = $"Driver={{{activeODBCDriverName}}};DBQ=" + sourceFileName + ";";
 
             Log.WriteToLogFile($"INFO: Access ODBC Connect String = '{accODBCConnectStr}'");
             try
@@ -231,15 +257,15 @@ namespace mdbtocsv
 
                     // open access connection
                     accODBCCon.Open();
-
                     userTables = accODBCCon.GetSchema("Tables");
 
-                    if (DEBUGMODE)
-                    {
+                    if(DEBUGMODE) { 
                         Log.WriteToLogFile("#### MDB Table List ####");
-                        DisplayDataTable(userTables, true);
+                        Util.DisplayDataTable(userTables, true);
                         Log.WriteToLogFile("#### MDB Table List ####");
                     }
+
+                    Log.WriteToLogFile($"Detecting tables in source file...", true);
 
                     foreach (DataRow row in userTables.Rows)
                     {
@@ -249,111 +275,137 @@ namespace mdbtocsv
                         }
                     }
 
-                    // TODO: Wrap csvwriter code in foreach loop for each table
-                    // TODO: Filter tables which are selected for output
+                    Log.WriteToLogFile($"Found {mdbUserTableNames.Count} tables to process...", true);
 
-                    foreach (string t in mdbUserTableNames)
-                        Log.WriteToLogFile($"Detected table [{t}]", true);
-
-                    string outputFilename = OutputDirectory + $"\\{mdbUserTableNames[0]}.txt";
-
-                    
-
-                    if(ForceLowercaseFilename)
-                        outputFilename = outputFilename.ToLower();
-
-                    Console.WriteLine($"{Environment.NewLine}OUTPUT_FILENAME={outputFilename}{Environment.NewLine}");
-
-                    OdbcCommand command = new OdbcCommand($"select [{mdbUserTableNames[0]}].* from [{mdbUserTableNames[0]}]", accODBCCon);
-                    
-                    Log.WriteToLogFile($"INFO: SQL command={command.CommandText}");
-
-                    var csv_config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+                    foreach (string tableName in mdbUserTableNames)
                     {
-                        TrimOptions = CsvHelper.Configuration.TrimOptions.Trim,
-                    };
+                        Console.WriteLine("");
+                        Log.WriteToLogFile($"### Processing table [{tableName}] ###", true);
 
-                    switch (DelimiterToUse)
-                    {
-                        case CSVDelimiter.comma:
-                            csv_config.Delimiter = ",";
-                            break;
-                        case CSVDelimiter.tab:
-                            csv_config.Delimiter = "\t";
-                            break;
-                        case CSVDelimiter.pipe:
-                            csv_config.Delimiter = "|";
-                            break;
-                        default:
-                            break;
-                    }
+                        string outputFilename = $"\\{tableName}";
 
-                    // TODO: check if output file exists and if -noprompt option is enabled
-
-                    using (var reader = command.ExecuteReader())
-                    using (var writer = new StreamWriter(outputFilename))
-                    using (var csv = new CsvWriter(writer, csv_config))
-                    {
-                        Console.WriteLine($"Found {reader.FieldCount} Fields in source table.");
-
-                        // Write column headers
-                        for (int i = 0; i < reader.FieldCount; i++)
+                        switch (FileNameCaseToUse)
                         {
-                            if(CleanFieldNames)
-                                csv.WriteField(Regex.Replace(reader.GetName(i).Trim().ToUpper(), @"[^0-9a-zA-Z]+", "_").TrimEnd('_'));
-                            else
-                                csv.WriteField(reader.GetName(i));
+                            case FileNameCase.none:
+                                break;
+                            case FileNameCase.lower:
+                                outputFilename = outputFilename.ToLower();
+                                break;
+                            case FileNameCase.upper:
+                                outputFilename = outputFilename.ToUpper();
+                                break;
+                            default:
+                                break;
                         }
-                        csv.NextRecord();
 
-                        var rowsWritten = 0;
-                        // Write data rows
-                        while (reader.Read())
+                        if (AppendCreateDateToOutputFiles)
                         {
+                            outputFilename = $"{OutputDirectory}{outputFilename}_{sourceFileInfo.CreationTime.ToString("yyyy-MM-dd")}.txt";
+                        }
+                        else
+                        {
+                            outputFilename = $"{OutputDirectory}{outputFilename}.txt";
+                        }
+                        
+
+                        Console.WriteLine($"OUTPUT_FILENAME={outputFilename}");
+
+                        if (File.Exists(outputFilename)) 
+                        {
+                            if(AllowOverWrite) 
+                            {
+                                Log.WriteToLogFile($"INFO: Output file exists and will be over-written.", true);
+                            }
+                            else 
+                            {
+                                Log.WriteToLogFile($"INFO: Output file exists. Skipping output for table {tableName}", true);
+                                Console.WriteLine($"  The -nooverwrite option prevented write to file.");
+                                continue; // skip table output
+                            }
+                            
+                        }
+
+                        Console.WriteLine();
+
+                        OdbcCommand command = new OdbcCommand($"select [{tableName}].* from [{tableName}]", accODBCCon);
+
+                        Log.WriteToLogFile($"INFO: SQL command={command.CommandText}");
+
+                        var csv_config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+                        {
+                            TrimOptions = CsvHelper.Configuration.TrimOptions.Trim,
+                        };
+
+                        switch (DelimiterToUse)
+                        {
+                            case CSVDelimiter.comma:
+                                csv_config.Delimiter = ",";
+                                break;
+                            case CSVDelimiter.tab:
+                                csv_config.Delimiter = "\t";
+                                break;
+                            case CSVDelimiter.pipe:
+                                csv_config.Delimiter = "|";
+                                break;
+                            default:
+                                break;
+                        }
+
+                        using (var reader = command.ExecuteReader())
+                        using (var writer = new StreamWriter(outputFilename))
+                        using (var csv = new CsvWriter(writer, csv_config))
+                        {
+                            Console.WriteLine($"Starting output...");
+                            Console.WriteLine($"Found {reader.FieldCount} Fields in table.");
+
+                            // Write column headers
                             for (int i = 0; i < reader.FieldCount; i++)
                             {
-                                csv.WriteField(reader[i]);
+                                if (CleanFieldNames)
+                                    csv.WriteField(Regex.Replace(reader.GetName(i).Trim(), @"[^0-9a-zA-Z]+", "_").ToUpper().TrimEnd('_'));
+                                else
+                                    csv.WriteField(reader.GetName(i));
                             }
-                            rowsWritten++;
                             csv.NextRecord();
+
+                            var rowsWritten = 0;
+                            // Write data rows
+                            while (reader.Read())
+                            {
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    csv.WriteField(reader[i]);
+                                }
+                                
+                                rowsWritten++;
+                                if(rowsWritten % 10000 == 0)
+                                    Console.WriteLine($"{rowsWritten.ToString("#,#")} rows written.");
+
+                                csv.NextRecord();
+                            }
+
+                            Console.WriteLine($"{rowsWritten.ToString("#,#")} total rows written to output file.");
+                            Console.WriteLine("");
                         }
 
-                        Console.WriteLine($"Wrote {rowsWritten.ToString("#,#")} rows to output file.");
-                    }
+                    } // foreach table found
+                    
 
                 }
 
             }
             catch (Exception ex)
             {
-                Log.WriteToLogFile($"ERROR caught while reading source MDB file: {sourceFileName}", true);
+                Log.WriteToLogFile($"ERROR caught while processing source MDB file: {sourceFileName}", true);
                 Log.WriteToLogFile(ex.Message);
                 Console.WriteLine(ex.Message);
+                ExitCodeStatus = 99; // critical error
                 return;
             }
 
         }
 
 
-        /// <summary>
-        /// Displays data from a data table to console. Used for Debuging.
-        /// </summary>
-        /// <param name="table"></param>
-        /// <remarks></remarks>
-        private static void DisplayDataTable(DataTable table, bool writeToLogFileOnly = false)
-        {
-            foreach (DataRow row in table.Rows)
-            {
-                foreach (DataColumn col in table.Columns)
-                {
-                    if (writeToLogFileOnly)
-                    { Log.WriteToLogFile($"{col.ColumnName} = {row[col]}"); }
-                    else
-                    { Console.WriteLine("{0} = {1}", col.ColumnName, row[col]); }
-                }
-                Log.WriteToLogFile("============================");
-            }
-        }
     }
 }
 
