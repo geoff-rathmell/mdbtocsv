@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="app_config.cs" />
     <Compile Include="logging_support.cs" />
     <Compile Include="mdbtocsv.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
