@@ -6,7 +6,7 @@
 
 Code published from a Visual Studio C# project.
 
-#### mdbtocsv is NOT feature complete and is a work in progress.
+#### mdbtocsv is still work in progress.
 
 ### Prerequisites 
 - 64 bit ODBC Access Driver installed.
