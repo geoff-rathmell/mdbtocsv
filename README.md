@@ -44,4 +44,5 @@ This would parse all tables found in the receipts.mdb file, using the PIPE delim
 
 mdbtocsv also uses the [csvhelper](https://joshclose.github.io/csvhelper/) library with its own license.
 
-Contact me at (mailto:geoff@bentonvillebase.com) for any questions.
+[Contact me](mailto:geoff@bentonvillebase.com) for any questions.
+
