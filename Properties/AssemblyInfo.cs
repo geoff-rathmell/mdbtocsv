@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("BASE2 Software")]
 [assembly: AssemblyProduct("mdbtocsv")]
-[assembly: AssemblyCopyright("MIT License")]
+[assembly: AssemblyCopyright("MIT License 2023")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
