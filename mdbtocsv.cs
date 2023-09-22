@@ -169,7 +169,7 @@ namespace mdbtocsv
                         Console.WriteLine("-p : use PIPE '|' Delimiter in output file.");
                         Console.WriteLine("-t : use TAB Delimiter in output file.");
                         Console.WriteLine("-c : Replaces all symbol chars with '_' and converts FieldName to UPPER case");
-
+                        Console.WriteLine("-adddate : Appends source file create date to output file(s).");
                         Console.WriteLine("-debug : enables debug 'verbose' mode.");
                         Console.WriteLine();
                         Console.WriteLine("Press Any Key To Continue.");
