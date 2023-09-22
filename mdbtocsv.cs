@@ -17,6 +17,7 @@ namespace mdbtocsv
 {
     internal class mdbtocsv
     {
+        #region CUSTOM_ENUMS
         public enum QuoteIdentifier
         {
             None, DoubleQuote
@@ -31,7 +32,9 @@ namespace mdbtocsv
         { 
             none, lower, upper
         }
+        #endregion
 
+        #region CLASS_VARS
         private static string FileToProcess { get; set; }
         private static bool GenerateLogFile { get; set; }
         private static bool DEBUGMODE { get; set; }
@@ -42,6 +45,9 @@ namespace mdbtocsv
         private static FileNameCase FileNameCaseToUse { get; set; }
         private static int ExitCodeStatus { get; set; }
         private static bool AppendCreateDateToOutputFiles { get; set; }
+        private static bool AddFilenameAsOutputField { get; set; }
+
+        #endregion
 
         static void Main(string[] args)
         {
@@ -66,6 +72,8 @@ namespace mdbtocsv
             Console.WriteLine($"*");
             Console.WriteLine($"************************************");
 
+            #region PROCESS_ARGS
+            
             // process all command line parameters
             if (args.Length > 0)
             {
@@ -138,17 +146,22 @@ namespace mdbtocsv
                     else if (args[i].ToLower() == "-p")
                     {
                         Log.WriteToLogFile("* startup param: Using PIPE Delimiter.", true);
-                        DelimiterToUse = CSVDelimiter.tab;
+                        DelimiterToUse = CSVDelimiter.pipe;
                     }
                     else if (args[i].ToLower() == "-c")
                     {
                         Log.WriteToLogFile("* startup param: Field Name Cleanup ENABLED.", true);
                         CleanFieldNames = true;
                     }
-                    else if (args[i].ToLower() == "-adddate")
+                    else if (args[i].ToLower() == "--add-date")
                     {
                         Log.WriteToLogFile("* startup param: Append File Create date to output file name option ENABLED.", true);
                         AppendCreateDateToOutputFiles = true;
+                    }
+                    else if (args[i].ToLower() == "--add-filename")
+                    {
+                        Log.WriteToLogFile("* startup param: Add source filename as column to output file(s) option ENABLED.", true);
+                        AddFilenameAsOutputField = true;
                     }
                     else if (args[i].ToLower().Contains("?") || args[i].ToLower().Contains("-help"))
                     {
@@ -169,7 +182,8 @@ namespace mdbtocsv
                         Console.WriteLine("-p : use PIPE '|' Delimiter in output file.");
                         Console.WriteLine("-t : use TAB Delimiter in output file.");
                         Console.WriteLine("-c : Replaces all symbol chars with '_' and converts FieldName to UPPER case");
-                        Console.WriteLine("-adddate : Appends source file create date to output file(s).");
+                        Console.WriteLine("--add-date : Appends source file create date to output file(s).");
+                        Console.WriteLine("--add-filename : Appends source filename as last column in output file(s).");
                         Console.WriteLine("-debug : enables debug 'verbose' mode.");
                         Console.WriteLine();
                         Console.WriteLine("Press Any Key To Continue.");
@@ -182,6 +196,8 @@ namespace mdbtocsv
                     }
                 }
             }
+
+            #endregion
 
             Console.WriteLine();
 
@@ -217,6 +233,7 @@ namespace mdbtocsv
             CleanFieldNames = false;
             FileNameCaseToUse = FileNameCase.none;
             AppendCreateDateToOutputFiles = false;
+            AddFilenameAsOutputField = false;
         }
 
         /// <summary>
@@ -228,7 +245,8 @@ namespace mdbtocsv
             Log.WriteToLogFile($"# Processing mdb file: {Path.GetFileName(sourceFileName).ToLower()}");
 
             FileInfo sourceFileInfo = new FileInfo(sourceFileName);
-            
+
+            string sourceFilenameForColumnData = sourceFileName.ToLower();
 
             List<string> mdbUserTableNames = new List<string>();
 
@@ -366,6 +384,10 @@ namespace mdbtocsv
                                 else
                                     csv.WriteField(reader.GetName(i));
                             }
+                            if(AddFilenameAsOutputField)
+                            {
+                                csv.WriteField("SOURCE_FILENAME");
+                            }
                             csv.NextRecord();
 
                             var rowsWritten = 0;
@@ -380,6 +402,11 @@ namespace mdbtocsv
                                 rowsWritten++;
                                 if(rowsWritten % 10000 == 0)
                                     Console.WriteLine($"{rowsWritten.ToString("#,#")} rows written.");
+
+                                if (AddFilenameAsOutputField)
+                                {
+                                    csv.WriteField(sourceFilenameForColumnData, true);
+                                }                                
 
                                 csv.NextRecord();
                             }
