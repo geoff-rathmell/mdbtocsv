@@ -28,7 +28,7 @@ The above example will extract all tables in source file as separate CSVs using 
 |-lower | \(optional\) force output filenames to be lowercase.|
 |-p | \(optional\) use PIPE '\|' Delimiter in output file.|
 |-t | \(optional\) use TAB Delimiter in output file.|
-|-c | \(optional\) Replaces all symbol chars with '_' and converts FieldName to UPPER case|
+|-c | \(optional\) Clean Fieldnames. Replaces all symbol chars with '_' and convert FieldName to UPPER case|
 |-debug | \(optional\) enables debug 'verbose' mode.|
 
 
