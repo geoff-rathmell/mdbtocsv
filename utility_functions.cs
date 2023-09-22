@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -105,28 +106,23 @@ namespace mdbtocsv_util
 
 
         /// <summary>
-        /// Removes invalid characters from passed in string.
+        /// Displays data from a data table to console. Used for Debuging.
         /// </summary>
-        /// <param name="stringToClean">(string) filename to clean of invalid characters.</param>
-        /// <returns>new string value with invalid filename chars removed.</returns>
-        public static string CleanFieldName(string stringToClean)
+        /// <param name="table"></param>
+        /// <remarks></remarks>
+        public static void DisplayDataTable(DataTable table, bool writeToLogFileOnly = false)
         {
-            // Replace invalid characters with an underscore.
-            string tempName = stringToClean.Replace(":", "_");
-            tempName = tempName.Replace("/", "_");
-            tempName = tempName.Replace(@"\", "_");
-            tempName = tempName.Replace("*", "_");
-            tempName = tempName.Replace("?", "_");
-            tempName = tempName.Replace("/", "_");
-            tempName = tempName.Replace(">", "_");
-            tempName = tempName.Replace("<", "_");
-            tempName = tempName.Replace("|", "_");
-            tempName = tempName.Replace("\"", "_");
-            tempName = tempName.Replace("&amp;", "_");
-            tempName = tempName.Replace("(", "_");
-            tempName = tempName.Replace(")", "_");
-            return tempName;
-
+            foreach (DataRow row in table.Rows)
+            {
+                foreach (DataColumn col in table.Columns)
+                {
+                    if (writeToLogFileOnly)
+                    { Log.WriteToLogFile($"{col.ColumnName} = {row[col]}"); }
+                    else
+                    { Console.WriteLine("{0} = {1}", col.ColumnName, row[col]); }
+                }
+                Log.WriteToLogFile("============================");
+            }
         }
     }
 
